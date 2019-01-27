@@ -16,10 +16,14 @@
         <hr/>
 
         <h3>Comments:</h3>
-        <div style="margin-bottom:50px;">
+        <div style="margin-bottom:50px;" v-if="user">
             <textarea class="form-control" rows="3" name="body" placeholder="Leave a comment"
                       v-model="commentBox"></textarea>
             <button class="btn btn-success" style="margin-top:10px" @click.prevent="postComment">Save Comment</button>
+        </div>
+        <div class="" v-else>
+            <h4>You must logged in to leave a comment</h4>
+            <a href="/login">log in now &gt;&gt;</a>
         </div>
 
 
@@ -48,7 +52,7 @@
                 comments: {},
                 post: {!! $post->toJson() !!},
                 commentBox: '',
-                user: {!! Auth::check() ? Auth::user()->toJson() : null !!}
+                user: {!! Auth::check() ? Auth::user()->toJson() : 'null' !!},
             },
             methods: {
                 getComments() {
@@ -72,10 +76,17 @@
                         .catch(function (error) {
                             console.log(error);
                         })
+                },
+                listen() {
+                    Echo.channel('post.' + this.post.id)
+                        .listen('NewComment', (comment) => {
+                            this.comments.unshift(comment)
+                        });
                 }
             },
             mounted() {
-                this.getComments()
+                this.getComments();
+                this.listen()
             }
         })
     </script>
